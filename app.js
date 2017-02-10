@@ -2,9 +2,12 @@ var express = require("express");
 var app = express();
 var bodyParser = require("body-parser");
 var mongoose = require("mongoose");
+var passport = require("passport");
+var LocalStrategy = require("passport-local");
 var Campground = require("./models/campground");
 var seedDB = require("./seeds");
 var Comment = require("./models/comment");
+var User = require("./models/user");
 
 mongoose.connect("mongodb://localhost/yelp_camp");
 app.use(bodyParser.urlencoded({extended: true}));
@@ -19,16 +22,36 @@ seedDB();
 //     {name: "Mountain Goat's Rest", image: "https://farm7.staticflickr.com/6014/6015893151_044a2af184.jpg"}
 // ];
 
+//passport configuration
+app.use(require("express-session")({
+    secret: "Amma is the Divine Mother of the Universe",
+    resave: false,
+    saveUninitialized: false
+}));
+app.use(passport.initialize());
+app.use(passport.session());
+passport.use(new LocalStrategy(User.authenticate()));
+passport.serializeUser(User.serializeUser());
+passport.deserializeUser(User.deserializeUser());
+
+//middleware - every route has access to this function
+//req.user is being used in header file which is included in all ejs files
+app.use(function (req, res, next) {
+    res.locals.currentUser = req.user;
+    next(); //run next code... not this line is missing then it will hang
+});
+
+
 app.get("/", function (req, res) {
     res.render("landing");
 });
 
 app.get("/campgrounds", function (req, res) {
-    Campground.find({}, function (err, campgrounds) {
+    Campground.find({}, function (err, allCampgrounds) {
         if(err){
             console.log(err);
         } else {
-            res.render("campgrounds/index", {campgrounds: campgrounds});
+            res.render("campgrounds/index", {campgrounds: allCampgrounds});
         }
     })
 });
@@ -41,7 +64,6 @@ app.post("/campgrounds", function (req, res) {
 
     //push the new campground in the array
     var newCampground = {name: name, image: image, description: desc};
-    // campgrounds.push(newCampground); //not using the array anymore
 
     Campground.create(newCampground, function (err, newItems) {
         if(err){
@@ -76,7 +98,7 @@ app.get("/campgrounds/:id", function (req, res) {
 //===============================
 // COMMENTS ROUTES
 //===============================
-app.get("/campgrounds/:id/comments/new", function (req, res) {
+app.get("/campgrounds/:id/comments/new", isLoggedIn , function (req, res) {
     Campground.findById(req.params.id, function (err, campground) {
         if(err){
             console.log(err);
@@ -86,7 +108,7 @@ app.get("/campgrounds/:id/comments/new", function (req, res) {
     });
 });
 
-app.post("/campgrounds/:id/comments", function (req, res) {
+app.post("/campgrounds/:id/comments", isLoggedIn,  function (req, res) {
     Campground.findById(req.params.id, function (err, campground) {
         if(err){
             console.log(err);
@@ -105,6 +127,57 @@ app.post("/campgrounds/:id/comments", function (req, res) {
         }
     })
 });
+
+//=====================
+// AUTHENTICATION ROUTES
+//=====================
+
+app.get("/register", function (req, res) {
+    res.render("register");
+});
+
+//handing the register route
+app.post("/register", function (req, res) {
+    var newUser = new User({username: req.body.username});
+    User.register(newUser, req.body.password, function (err, user) {
+        if(err){
+            console.log(err);
+            return res.redirect("/register");
+        }
+        passport.authenticate("local")(req, res, function () {
+            res.redirect("/campgrounds");
+        })
+    })
+});
+
+//show login page
+
+app.get("/login", function (req, res) {
+    res.render("login");
+});
+
+//login logic
+//app.post("/logic", middleware, callback)
+app.post("/login", passport.authenticate("local", {
+    successRedirect: "/campgrounds",
+    failureRedirect: "/login"
+}) ,function (req, res) {
+});
+
+//logout
+app.get("/logout", function (req, res) {
+    req.logout();
+    res.redirect("/campgrounds");
+});
+
+//middleware
+//res, res and next... if user is already authenticated then execute the next callback
+function isLoggedIn(req, res, next) {
+    if(req.isAuthenticated()){
+        return next();
+    }
+    res.redirect("/login");
+}
 
 app.listen(3000, function () {
     console.log("YelpCamp server started... listing at port: 3000");
