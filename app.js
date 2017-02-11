@@ -19,7 +19,7 @@ app.use(bodyParser.urlencoded({extended: true}));
 app.set("view engine", "ejs");
 app.use(express.static(__dirname + "/public"));
 // console.log(__dirname);
-seedDB();
+// seedDB();   //seed the database
 
 // var campgrounds = [
 //     {name: "Salmon Creek", image: "https://farm8.staticflickr.com/7252/7626464792_3e68c2a6a5.jpg"},
