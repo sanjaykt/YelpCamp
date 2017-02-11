@@ -5,8 +5,14 @@ var campgroundSchema = new mongoose.Schema({
     name: String,
     image: String,
     description: String,
-    //Reference to the comment
-    comments: [
+    author: {
+        id: {
+            type: mongoose.Schema.Types.ObjectId,  //calling _id of User
+            ref: "User" //referring to User model
+        },
+        username: String
+    },
+    comments: [     //Reference to the comment
         {
             type: mongoose.Schema.Types.ObjectId,
             ref: "Comment"

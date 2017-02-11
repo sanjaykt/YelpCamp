@@ -14,18 +14,23 @@ router.get("/", function (req, res) {
 });
 
 //CREATE route
-router.post("/", function (req, res) {
+router.post("/", isLoggedIn, function (req, res) {
     var name = req.body.name;
     var image = req.body.image;
     var desc = req.body.description;
+    var author = {
+        id: req.user._id,
+        username: req.user.username
+    };
 
     //push the new campground in the array
-    var newCampground = {name: name, image: image, description: desc};
-
-    Campground.create(newCampground, function (err, newItems) {
+    var newCampground = {name: name, image: image, description: desc, author: author};
+    // console.log(req.user);
+    Campground.create(newCampground, function (err, newlyCreated) {
         if(err){
             console.log(err);
         } else {
+            // console.log(newlyCreated);
             //create a new entry and redirect to show the campgrounds
             res.redirect("/campgrounds");
         }
@@ -33,7 +38,7 @@ router.post("/", function (req, res) {
 });
 
 //NEW route
-router.get("/new", function (req, res) {
+router.get("/new", isLoggedIn, function (req, res) {
     res.render("campgrounds/new");
 });
 
