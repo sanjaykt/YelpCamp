@@ -25,4 +25,18 @@
             </div>
         </div>
     </div>
+    <div class="container">
+        <!--error is an array, so it a never falsy even if it is empty-->
+        <% if(error && error.length > 0) { %>
+            <div class="alert alert-danger" role="alert">
+                <h4><%= error %></h4>
+            </div>
+        <% } %>
+        <% if(success && success.length > 0) { %>
+            <div class="alert alert-success" role="alert">
+                <h1><%= success %></h1>
+            </div>
+        <% } %>
+    </div>
+
 
