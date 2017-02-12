@@ -46,13 +46,6 @@ router.get("/logout", function (req, res) {
     res.redirect("/campgrounds");
 });
 
-//middleware
-//res, res and next... if user is already authenticated then execute the next callback
-function isLoggedIn(req, res, next) {
-    if(req.isAuthenticated()){
-        return next();
-    }
-    res.redirect("/login");
-}
+
 
 module.exports = router;
