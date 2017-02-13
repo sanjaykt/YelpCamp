@@ -19,6 +19,7 @@ router.get("/", function (req, res) {
 
 router.post("/", middleware.isLoggedIn, function (req, res) {
     var name = req.body.name;
+    var price = req.body.price;
     var image = req.body.image;
     var desc = req.body.description;
     var author = {
@@ -27,7 +28,7 @@ router.post("/", middleware.isLoggedIn, function (req, res) {
     };
 
     //push the new campground in the array
-    var newCampground = {name: name, image: image, description: desc, author: author};
+    var newCampground = {name: name, price: price, image: image, description: desc, author: author};
     // console.log(req.user);
     Campground.create(newCampground, function (err, newlyCreated) {
         if (err) {
